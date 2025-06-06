@@ -11,7 +11,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract CQMToken is ERC20, ERC20Burnable, Ownable, ERC20Permit {
     constructor(
         address initialOwner
-    ) ERC20("CQMToken", "CQM") Ownable(initialOwner) ERC20Permit("CQMToken") {}
+    ) ERC20("CQM", "CQM") Ownable(initialOwner) ERC20Permit("CQMToken") {}
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);

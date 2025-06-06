@@ -37,6 +37,7 @@ describe("CQM ERC20 token test", () => {
                 .some(event => event.args && event.args.value === ethers.toBigInt(1000)),
             "Transfer event with correct value not emitted"
         )
+        assert.equal(await contract.totalSupply(), ethers.toBigInt(1000))
     })
 
     it("Transfer 100 CQM token to WORKER", async () => {
@@ -168,6 +169,17 @@ describe("CQM ERC20 token test", () => {
                 .some(event => event.args && event.args.value === ethers.toBigInt(20)),
             "Transfer event with correct value not emitted"
         )
+    })
+
+    it("Burn 10 CQM token from WORKER", async () => {
+        await contract.connect(WORKER).burn(10);
+        assert.equal(await contract.balanceOf(WORKER.address), ethers.toBigInt(80))
+        await assert.isOk(
+            (await contract.queryFilter(contract.filters.Transfer(WORKER.address, ethers.ZeroAddress)))
+                .some(event => event.args && event.args.value === ethers.toBigInt(10)),
+            "Transfer event with correct value not emitted"
+        )
+        assert.equal(await contract.totalSupply(), ethers.toBigInt(990))
     })
 
 });
