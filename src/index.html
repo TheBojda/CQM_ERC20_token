@@ -25,6 +25,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="#sign">Sign Transfer</a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#process">Process Transfer</a>
+                </li>
             </ul>
         </div>
     </nav>
@@ -48,17 +51,72 @@
                 <p class="mb-1">Decimals: 18</p>
             </div>
         </div>
-    </div>
 
-    <div id="page-request" class="page d-none">
-        <h1>Transfer Request</h1>
-        <p>Form to request a transfer.</p>
-    </div>
+        <div id="page-request" class="page d-none">
+            <h1>Transfer Request</h1>
+            <div class="mt-3">
+                <div class="mb-3">
+                    <label for="request-eth-address" class="form-label">Ethereum Address</label>
+                    <input type="text" class="form-control" id="request-eth-address" readonly>
+                </div>
+                <div class="mb-3">
+                    <label for="request-amount" class="form-label">Amount</label>
+                    <input type="number" class="form-control" id="request-amount" min="0" step="0.000000000000000001">
+                </div>
+                <button id="generate-qr" class="btn btn-primary">Generate QR Code</button>
+                <!-- QR Code Modal -->
+                <div class="modal fade" id="request-qr-code-modal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="qrCodeModalLabel">QR Code</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <div id="qr-code-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <div id="page-sign" class="page d-none">
-        <h1>Sign Transfer</h1>
-        <p>Sign an existing transfer request.</p>
-    </div>
+        <div id="page-sign" class="page d-none">
+            <h1>Sign Transfer</h1>
+            <div class="mt-3">
+                <div class="mb-3">
+                    <label for="sign-from-address" class="form-label">From Address</label>
+                    <input type="text" class="form-control" id="sign-from-address">
+                </div>
+                <div class="mb-3">
+                    <label for="sign-to-address" class="form-label">To Address</label>
+                    <input type="text" class="form-control" id="sign-to-address">
+                </div>
+                <div class="mb-3">
+                    <label for="sign-amount" class="form-label">Amount</label>
+                    <input type="number" class="form-control" id="sign-amount" min="0" step="0.000000000000000001">
+                </div>
+                <button id="sign-transfer-btn" class="btn btn-primary">Sign Transfer</button>
+                <!-- QR Code Modal -->
+                <div class="modal fade" id="sign-qr-code-modal" tabindex="-1" aria-labelledby="sign-qrCodeModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="sign-qrCodeModalLabel">QR Code</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <div id="sign-qr-code-container"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-process" class="page d-none">
+            <h1>Process Transfer</h1>
+        </div>
     </div>
 
     <script type="module" src="./index.ts"></script>

@@ -21,8 +21,11 @@
     "@parcel/transformer-sass": "2.15.2",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
+    "@types/bootstrap": "^5.2.10",
     "@types/chai": "^4.3.20",
     "@types/mocha": "^10.0.10",
+    "@types/node": "^22.15.30",
+    "@types/qrcode": "^1.5.5",
     "chai": "^4.5.0",
     "ethers": "^6.14.3",
     "hardhat": "^2.24.2",
@@ -39,6 +42,8 @@
     "bootstrap": "^5.3.6",
     "bootstrap-icons": "^1.13.1",
     "copy-to-clipboard": "^3.3.3",
-    "parcel": "^2.15.2"
+    "html5-qrcode": "^2.3.8",
+    "parcel": "^2.15.2",
+    "qrcode": "^1.5.4"
   }
 }
