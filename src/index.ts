@@ -6,7 +6,7 @@ import detectEthereumProvider from '@metamask/detect-provider';
 import { Html5Qrcode } from "html5-qrcode";
 import copy from "copy-to-clipboard";
 import QRCode from 'qrcode';
-import { JsonRpcProvider, Contract } from 'ethers';
+import { JsonRpcProvider, Contract, BrowserProvider } from 'ethers';
 
 const CONTRACT_ADDRESS = '0xF988A1b6d4C00832ed3570a4e50DdA4357a22F7D';
 const RPC_URL = 'https://rpc.chiadochain.net';
@@ -73,7 +73,7 @@ class ERC20App {
         }
     }
 
-    private handleHashChange(): void {
+    private async handleHashChange(): Promise<void> {
         const hash = window.location.hash.slice(1);
         const [page] = hash.split('?');
 
@@ -104,32 +104,34 @@ class ERC20App {
             default:
                 this.showPage('main');
         }
+
+        // Update the Ethereum address when the page loads
+        setTimeout(async () => {
+            const provider = await this.getProvider();
+            if (provider && (provider as any).request) {
+                try {
+                    const accounts = await (provider as any).request({
+                        method: 'eth_requestAccounts'
+                    });
+                    const addressElement = document.getElementById('request-eth-address') as HTMLInputElement;
+                    if (addressElement && accounts[0]) {
+                        addressElement.value = accounts[0];
+                    }
+                    const signFromAddressElement = document.getElementById('sign-from-address') as HTMLInputElement;
+                    if (signFromAddressElement && accounts[0]) {
+                        signFromAddressElement.value = accounts[0];
+                    }
+                } catch (e: unknown) {
+                    const message = e instanceof Error ? e.message : String(e);
+                    console.error('Failed to get Ethereum address:', message);
+                }
+            }
+        }, 3000);
     }
 
     private async onLoad() {
         this.handleHashChange();
-
         this.addEventHandlers();
-
-        const provider = await this.getProvider();
-        if (provider && (provider as any).request) {
-            try {
-                const accounts = await (provider as any).request({
-                    method: 'eth_requestAccounts'
-                });
-                const addressElement = document.getElementById('request-eth-address') as HTMLInputElement;
-                if (addressElement && accounts[0]) {
-                    addressElement.value = accounts[0];
-                }
-                const signFromAddressElement = document.getElementById('sign-from-address') as HTMLInputElement;
-                if (signFromAddressElement && accounts[0]) {
-                    signFromAddressElement.value = accounts[0];
-                }
-            } catch (e: unknown) {
-                const message = e instanceof Error ? e.message : String(e);
-                console.error('Failed to get Ethereum address:', message);
-            }
-        }
     }
 
     private addEventHandlers() {
@@ -279,7 +281,7 @@ class ERC20App {
 
             const fromAddress = fromAddressElement.value;
             const toAddress = toAddressElement.value;
-            const amount = amountElement.value;
+            const amount = (parseFloat(amountElement.value) * Math.pow(10, 18)).toString();
 
             if (!fromAddress || !toAddress || !amount) {
                 alert('All fields are required.');
@@ -306,7 +308,7 @@ class ERC20App {
 
                 const chainId = await (provider as any).request({ method: 'eth_chainId' });
                 const domain = {
-                    name: 'MyETHMeta',
+                    name: 'CQMToken',
                     version: '1',
                     chainId: parseInt(chainId, 16),
                     verifyingContract: CONTRACT_ADDRESS
@@ -368,7 +370,22 @@ class ERC20App {
         }
     }
 
+    private splitSignature(signature: string): { r: string; s: string; v: number } {
+        if (signature.startsWith("0x")) signature = signature.slice(2);
+        if (signature.length !== 130) throw new Error("Invalid signature length");
+
+        const r = "0x" + signature.slice(0, 64);
+        const s = "0x" + signature.slice(64, 128);
+        let v = parseInt(signature.slice(128, 130), 16);
+
+        // Normalize v (some sources use 0/1 instead of 27/28)
+        if (v < 27) v += 27;
+
+        return { r, s, v };
+    }
+
     private async handleStartQrReader() {
+        const provider = await this.getProvider();
         const qrReaderDiv = document.getElementById('qr-reader');
         const qrResultElement = document.getElementById('qr-result') as HTMLInputElement;
 
@@ -397,6 +414,26 @@ class ERC20App {
                             ['signature', signature]
                         ]);
                         console.log('Parsed QR Code Data:', parsedData);
+                        const { v, r, s } = this.splitSignature(signature);
+
+                        const ethersProvider = new BrowserProvider(provider);
+                        const abi = [
+                            "function metaTransfer(address from,address to,uint256 amount,uint256 deadline,uint8 v,bytes32 r,bytes32 s)"
+                        ];
+                        const callContract = async () => {
+                            const signer = await ethersProvider.getSigner();
+                            const contract = new Contract(CONTRACT_ADDRESS, abi, signer);
+                            contract.metaTransfer(
+                                fromAddress,
+                                toAddress,
+                                amount,
+                                deadline,
+                                v,
+                                r,
+                                s
+                            )
+                        }
+                        callContract()
                     } else {
                         console.error('Invalid QR Code format.');
                     }

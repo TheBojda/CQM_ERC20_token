@@ -8,7 +8,7 @@
   "scripts": {
     "test": "hardhat test",
     "start": "parcel src/index.html",
-    "build": "parcel build src/index.html --dist-dir docs"
+    "build": "parcel build src/index.html"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
