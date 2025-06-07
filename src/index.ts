@@ -3,8 +3,7 @@ import * as bootstrap from 'bootstrap';
 import './style.scss';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import detectEthereumProvider from '@metamask/detect-provider';
-
-// Extend the Window interface to include the ethereum property
+import { Html5Qrcode } from "html5-qrcode";
 import copy from "copy-to-clipboard";
 import QRCode from 'qrcode';
 import { JsonRpcProvider, Contract } from 'ethers';
@@ -158,6 +157,11 @@ class ERC20App {
         if (signTransferBtn) {
             signTransferBtn.onclick = this.handleSignTransfer.bind(this);
         }
+
+        const startQrReaderBtn = document.getElementById('start-qr-reader-btn');
+        if (startQrReaderBtn) {
+            startQrReaderBtn.onclick = this.handleStartQrReader.bind(this);
+        }
     }
 
     private async handleAddChiado() {
@@ -241,7 +245,7 @@ class ERC20App {
                 return;
             }
 
-            const qrData = `http://${this.SITE_HOST}#sign?address=${ethAddress}&amount=${requestAmount}`;
+            const qrData = `https://metamask.app.link/dapp/${this.SITE_HOST}#sign?address=${ethAddress}&amount=${requestAmount}`;
             try {
                 container.innerHTML = '';
                 QRCode.toCanvas(qrData, { width: 256 }, (err, canvas) => {
@@ -363,6 +367,52 @@ class ERC20App {
             }
         }
     }
+
+    private async handleStartQrReader() {
+        const qrReaderDiv = document.getElementById('qr-reader');
+        const qrResultElement = document.getElementById('qr-result') as HTMLInputElement;
+
+        if (qrReaderDiv && qrResultElement) {
+            qrReaderDiv.innerHTML = ''; // Clear previous content
+
+            const html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, // Use the environment camera
+                {
+                    fps: 10, // Frames per second for scanning
+                    qrbox: { width: 250, height: 250 } // Size of the scanning box
+                },
+                (decodedText) => {
+                    qrResultElement.value = decodedText; // Set the decoded text to the input field
+                    html5QrCode.stop(); // Stop scanning after a successful read
+                    const parts = decodedText.split(':');
+                    if (parts.length === 6) {
+                        const [fromAddress, toAddress, amount, nonce, deadline, signature] = parts;
+                        const parsedData = new Map<string, string>([
+                            ['fromAddress', fromAddress],
+                            ['toAddress', toAddress],
+                            ['amount', amount],
+                            ['nonce', nonce],
+                            ['deadline', deadline],
+                            ['signature', signature]
+                        ]);
+                        console.log('Parsed QR Code Data:', parsedData);
+                    } else {
+                        console.error('Invalid QR Code format.');
+                    }
+                },
+                (errorMessage) => {
+                    console.warn(`QR Code scanning error: ${errorMessage}`);
+                }
+            ).catch((err) => {
+                console.error(`Failed to start QR Code scanning: ${err}`);
+                alert('Failed to start QR Code scanning.');
+            });
+        } else {
+            alert('Required elements for QR Code scanning are missing.');
+        }
+    }
+
 }
 
 new ERC20App();

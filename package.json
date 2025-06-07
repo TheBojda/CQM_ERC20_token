@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "test": "hardhat test",
-    "start": "parcel src/index.html"
+    "start": "parcel src/index.html",
+    "build": "parcel build src/index.html --dist-dir docs"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.8",
