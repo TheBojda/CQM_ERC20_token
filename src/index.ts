@@ -62,6 +62,8 @@ class ERC20App {
         return this.provider;
     }
 
+    // -- PAGE LOGIC --
+
     private showPage(pageId: string): void {
         document.querySelectorAll<HTMLElement>('.page').forEach(page => {
             page.classList.add('d-none');
@@ -78,6 +80,9 @@ class ERC20App {
         const [page] = hash.split('?');
 
         switch (page) {
+            case 'direct':
+                this.showPage('direct');
+                break;
             case 'process':
                 this.showPage('process');
                 break;
@@ -105,7 +110,7 @@ class ERC20App {
                 this.showPage('main');
         }
 
-        // Update the Ethereum address when the page loads
+        // Update the Ethereum address and balance when the page loads
         setTimeout(async () => {
             const provider = await this.getProvider();
             if (provider && (provider as any).request) {
@@ -120,6 +125,17 @@ class ERC20App {
                     const signFromAddressElement = document.getElementById('sign-from-address') as HTMLInputElement;
                     if (signFromAddressElement && accounts[0]) {
                         signFromAddressElement.value = accounts[0];
+                    }
+                    const balanceElement = document.getElementById('balance') as HTMLElement;
+                    if (balanceElement && accounts[0]) {
+                        const ethersProvider = new JsonRpcProvider(RPC_URL);
+                        const abi = [
+                            "function balanceOf(address account) public view returns (uint256)"
+                        ];
+                        const contract = new Contract(CONTRACT_ADDRESS, abi, ethersProvider);
+                        const rawBalance = await contract.balanceOf(accounts[0]);
+                        const formattedBalance = Math.floor(parseFloat(rawBalance.toString()) / Math.pow(10, 18)).toString();
+                        balanceElement.innerText = formattedBalance + ' CQM';
                     }
                 } catch (e: unknown) {
                     const message = e instanceof Error ? e.message : String(e);
@@ -164,7 +180,19 @@ class ERC20App {
         if (startQrReaderBtn) {
             startQrReaderBtn.onclick = this.handleStartQrReader.bind(this);
         }
+
+        const directScanQrBtn = document.getElementById('direct-scan-qr-btn');
+        if (directScanQrBtn) {
+            directScanQrBtn.onclick = this.handleDirectScanQr.bind(this);
+        }
+
+        const directTransferBtn = document.getElementById('direct-transfer-btn');
+        if (directTransferBtn) {
+            directTransferBtn.onclick = this.handleDirectTransfer.bind(this);
+        }
     }
+
+    // -- HANDLERS --
 
     private async handleAddChiado() {
         const provider = await this.getProvider();
@@ -448,6 +476,57 @@ class ERC20App {
         } else {
             alert('Required elements for QR Code scanning are missing.');
         }
+    }
+
+    private async handleDirectScanQr() {
+        const toAddressElement = document.getElementById('direct-to-address') as HTMLInputElement;
+        const html5QrCode = new Html5Qrcode("direct-qr-reader");
+        html5QrCode.start(
+            { facingMode: "environment" },
+            {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            },
+            (decodedText) => {
+                const address = decodedText.split('@')[0].replace('ethereum:', ''); // Extract the address by removing the prefix and chain information
+                toAddressElement.value = address; // Set the extracted address to the input field
+                html5QrCode.stop();
+            },
+            (errorMessage) => {
+                console.warn(`QR Code scanning error: ${errorMessage}`);
+            }
+        ).catch((err) => {
+            console.error(`Failed to start QR Code scanning: ${err}`);
+            alert('Failed to start QR Code scanning.');
+        });
+    }
+
+    private async handleDirectTransfer() {
+        alert('transfer')
+        const provider = await this.getProvider();
+        const toAddressElement = document.getElementById('direct-to-address') as HTMLInputElement;
+        const amountElement = document.getElementById('direct-amount') as HTMLInputElement;
+
+        if (!toAddressElement || !amountElement) {
+            alert('Required fields are missing.');
+            return;
+        }
+
+        const toAddress = toAddressElement.value;
+        const amount = (parseFloat(amountElement.value) * Math.pow(10, 18)).toString();
+
+        if (!toAddress || !amount) {
+            alert('All fields are required.');
+            return;
+        }
+
+        const ethersProvider = new BrowserProvider(provider);
+        const abi = [
+            " function transfer(address to, uint256 value) public returns (bool)"
+        ];
+        const signer = await ethersProvider.getSigner();
+        const contract = new Contract(CONTRACT_ADDRESS, abi, signer);
+        await contract.transfer(toAddress, amount)
     }
 
 }
