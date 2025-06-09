@@ -7,6 +7,7 @@ describe("CQM ERC20 token test", () => {
     let contract: CQMToken
 
     let OWNER: any
+    let OWNER2: any
     let WORKER: any
     let USER: any
 
@@ -17,6 +18,7 @@ describe("CQM ERC20 token test", () => {
         OWNER = signers[0]
         WORKER = signers[1]
         USER = signers[2]
+        OWNER2 = signers[3]
 
         const CQMToken = await ethers.getContractFactory("CQMToken");
         contract = await CQMToken.deploy(OWNER.address)
@@ -29,8 +31,20 @@ describe("CQM ERC20 token test", () => {
         }
     })
 
+    it("Check Ownable2Step by transfer ownership to OWNER2", async () => {
+        await contract.transferOwnership(OWNER2.address)
+        assert.equal(await contract.owner(), OWNER.address, "Ownership should not be transferred to OWNER2")
+        assert.equal(await contract.pendingOwner(), OWNER2.address, "Pending owner should be OWNER2")
+    })
+
+    it("Accept ownership by OWNER2", async () => {
+        await contract.connect(OWNER2).acceptOwnership()
+        assert.equal(await contract.owner(), OWNER2.address, "Ownership should be transferred to OWNER2")
+        assert.equal(await contract.pendingOwner(), ethers.ZeroAddress, "Pending owner should be cleared")
+    })
+
     it("Mint 1000 CQM token", async () => {
-        await contract.mint(OWNER.address, 1000)
+        await contract.connect(OWNER2).mint(OWNER.address, 1000)
         assert.equal(await contract.balanceOf(OWNER.address), ethers.toBigInt(1000))
         await assert.isOk(
             (await contract.queryFilter(contract.filters.Transfer(ethers.ZeroAddress, OWNER.address)))

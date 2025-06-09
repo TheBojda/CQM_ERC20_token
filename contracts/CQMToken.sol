@@ -5,10 +5,11 @@ pragma solidity ^0.8.27;
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-contract CQMToken is ERC20, ERC20Burnable, Ownable, ERC20Permit {
+contract CQMToken is ERC20, ERC20Burnable, Ownable2Step, ERC20Permit {
     constructor(
         address initialOwner
     ) ERC20("CQM", "CQM") Ownable(initialOwner) ERC20Permit("CQMToken") {}
