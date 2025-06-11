@@ -502,7 +502,6 @@ class ERC20App {
     }
 
     private async handleDirectTransfer() {
-        alert('transfer')
         const provider = await this.getProvider();
         const toAddressElement = document.getElementById('direct-to-address') as HTMLInputElement;
         const amountElement = document.getElementById('direct-amount') as HTMLInputElement;
